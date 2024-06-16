@@ -6,7 +6,7 @@ import {
 } from "react-hook-form";
 
 type Register = {
-  userId: string;
+  userId: number;
   userName: string;
   base64: string;
   file: File;
@@ -14,10 +14,10 @@ type Register = {
 type Inputs = {
   courseId: number;
   courseName: string;
-  startDate: Date;
-  endDate: Date;
-  startRegisterDate: Date;
-  endregisterDate: Date;
+  startDate: string;
+  endDate: string;
+  startRegisterDate: string;
+  endregisterDate: string;
   register: Register[];
 };
 
@@ -32,6 +32,29 @@ const Employee = [
   { userName: "teletub", userId: 2 },
   { userName: "joe", userId: 3 },
 ];
+
+const response = {
+  courseId: 3,
+  startDate: "2024-06-13T21:00",
+  endDate: "2024-06-27T21:00",
+  startRegisterDate: "2024-07-02T21:00",
+  endregisterDate: "2024-06-18T21:01",
+  register: [
+    {
+      userId: 3,
+      fileName: "file1",
+      file: {},
+      base64: "data:image/",
+    },
+    {
+      userId: 1,
+      fileName: "file2",
+      base64:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAADmCAYAAADiHWBJRU5ErkJggg==",
+    },
+  ],
+};
+
 export default function CourseRecorderPage() {
   const {
     register,
@@ -40,7 +63,9 @@ export default function CourseRecorderPage() {
     setValue,
     control,
     formState: { errors },
-  } = useForm<Inputs>();
+  } = useForm<Inputs>({
+    defaultValues: response,
+  });
   const { fields, append, prepend, remove, swap, move, insert } = useFieldArray(
     {
       control, // control props comes from useForm (optional: if you are using FormProvider)
@@ -84,17 +109,18 @@ export default function CourseRecorderPage() {
         <input type="datetime-local" {...register("startRegisterDate")} />
         <input type="datetime-local" {...register("endregisterDate")} />
         ผู้ลงทะเบียน
-        <button type="button" onClick={() => append()}>
+        <button type="button" onClick={() => append({userId:0})}>
           append
         </button>
         <ul>
           {fields.map((item, index) => (
-            <li key={item.userId}>
+            <li key={"user" + index}>
               {/* <input {...register(`register.${index}.userName`)} /> */}
               <select
                 defaultValue={2}
                 {...register(`register.${index}.userId`)}
               >
+                <option value={0}>PleaseSelect</option>
                 {Employee.map((x) => (
                   <option value={x.userId}>{x.userName}</option>
                 ))}
@@ -105,9 +131,10 @@ export default function CourseRecorderPage() {
                 {
                   onChange: async (e) => {
                     // console.log(e.target.files[0]);
-                    const a = await toBase64(e.target.files[0]);
+                    const a = await toBase64(e.target.files[0]).then();
                     // putinto
-                    setValue(`register.${index}.base64`, a); // ✅ performant
+                    setValue(`register.${index}.base64`, a as string); // ✅ performant
+                    setValue(`register.${index}.file`, e.target.files![0]); // ✅ performant
                     // console.log(a);
                   },
                 })}
